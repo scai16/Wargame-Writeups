@@ -1,3 +1,6 @@
 # OverTheWire challenge credentials
-overthewire/*.key
-overthewire/*_pass.txt
+overthewire/**/*.key
+overthewire/**/*_pass.txt
+
+# VS Code Settings
+.vscode

@@ -1,4 +1,4 @@
-# Writeups
+# Wargame Writeups
 
 Writeups for wargames and long-running CTF challenges.
 

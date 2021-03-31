@@ -24,4 +24,5 @@ Writeups for wargames and long-running CTF challenges.
 - [ ] [Pwn College](https://pwn.college/) ![Binary Exploitation](https://img.shields.io/badge/Binary%20Exploitation-red)
 - [ ] [pwnable.kr](https://pwnable.kr/) ![Binary Exploitation](https://img.shields.io/badge/Binary%20Exploitation-red)
 - [ ] [pwnable.tw](https://pwnable.tw/) ![Binary Exploitation](https://img.shields.io/badge/Binary%20Exploitation-red)
+- [ ] [ROP Emporium](https://ropemporium.com/) ![Binary Exploitation](https://img.shields.io/badge/Binary%20Exploitation-red)
 - [ ] [XSS game](https://xss-game.appspot.com/) ![Web Exploitation](https://img.shields.io/badge/Web%20Exploitation-brightgreen)

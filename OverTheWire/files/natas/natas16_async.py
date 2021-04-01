@@ -3,7 +3,7 @@ import asyncio
 from aiohttp import BasicAuth, ClientSession
 
 
-url = 'http://natas16.natas.labs.overthewire.org/index.php?needle={}password&submit'
+url = 'http://natas16.natas.labs.overthewire.org/index.php?needle={}password'
 auth = BasicAuth('natas16', natas16_pass)
 
 async def search_string(search, data):

@@ -2,7 +2,7 @@
 import requests
 
 
-url = 'http://natas16.natas.labs.overthewire.org/index.php?needle={}password&submit'
+url = 'http://natas16.natas.labs.overthewire.org/index.php?needle={}password'
 auth = ('natas16', natas16_pass)
 
 def get_charset():

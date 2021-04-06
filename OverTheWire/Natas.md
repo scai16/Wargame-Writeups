@@ -2,6 +2,44 @@
 
 [![OverTheWire: Natas](https://img.shields.io/badge/OverTheWire-Natas-white)](https://overthewire.org/wargames/natas/)
 
+<details>
+<summary><b>Table of Contents</b></summary>
+
+- [OverTheWire - Natas](#overthewire---natas)
+  - [Introduction](#introduction)
+  - [Level 0](#level-0)
+  - [Level 1](#level-1)
+  - [Level 2](#level-2)
+  - [Level 3](#level-3)
+  - [Level 4](#level-4)
+  - [Level 5](#level-5)
+  - [Level 6](#level-6)
+  - [Level 7](#level-7)
+  - [Level 8](#level-8)
+  - [Level 9](#level-9)
+  - [Level 10](#level-10)
+  - [Level 11](#level-11)
+  - [Level 12](#level-12)
+  - [Level 13](#level-13)
+  - [Level 14](#level-14)
+  - [Level 15](#level-15)
+  - [Level 16](#level-16)
+  - [Level 17](#level-17)
+  - [Level 18](#level-18)
+  - [Level 19](#level-19)
+  - [Level 20](#level-20)
+  - [Level 21](#level-21)
+  - [Level 22](#level-22)
+  - [Level 23](#level-23)
+  - [Level 24](#level-24)
+  - [Level 25](#level-25)
+  - [Level 26](#level-26)
+  - [Level 27](#level-27)
+
+</details>
+
+## Introduction
+
 The `Natas` wargame is a series of web security challenges. Many of the earlier challenges can be solved with the browser's built-in developer tools and command line utilities. For the challenges that can't be solved within those, I like to use `CyberChef`, `Burp Suite Community`, and `Python`. However, there are many other great tools out there that you can use, so just use what you're comfortable with.
 
 **Connecting to Natas**
@@ -11,40 +49,6 @@ Username: natas0
 Password: natas0
 URL:      http://natas0.natas.labs.overthewire.org
 ```
-
-<details>
-<summary><b>Table of Contents</b></summary>
-
-- [Level 0](#level-0)
-- [Level 1](#level-1)
-- [Level 2](#level-2)
-- [Level 3](#level-3)
-- [Level 4](#level-4)
-- [Level 5](#level-5)
-- [Level 6](#level-6)
-- [Level 7](#level-7)
-- [Level 8](#level-8)
-- [Level 9](#level-9)
-- [Level 10](#level-10)
-- [Level 11](#level-11)
-- [Level 12](#level-12)
-- [Level 13](#level-13)
-- [Level 14](#level-14)
-- [Level 15](#level-15)
-- [Level 16](#level-16)
-- [Level 17](#level-17)
-- [Level 18](#level-18)
-- [Level 19](#level-19)
-- [Level 20](#level-20)
-- [Level 21](#level-21)
-- [Level 22](#level-22)
-- [Level 23](#level-23)
-- [Level 24](#level-24)
-- [Level 25](#level-25)
-- [Level 26](#level-26)
-- [Level 27](#level-27)
-
-</details>
 
 ## Level 0
 
@@ -789,7 +793,7 @@ Username: <input name="username"><br>
 
 Alright, so we have another SQL challenge, but this time, it looks like the `echo` lines are commented out. We no longer have an output to determine whether our query was `true` or `false`. However, this doesn't mean we're out of luck just yet.
 
-We can take advantage of MySQL's [`SLEEP`](https://dev.mysql.com/doc/internals/en/sleep.html) command, which allows us to do a timing attack on SQL.
+We can take advantage of MySQL's [`SLEEP`](https://dev.mysql.com/doc/internals/en/sleep.html) command, which allows us to do a time-based blind SQLi.
 
 [Asyncio](files/natas/natas17_async.py)\
 [Without Asyncio](files/natas/natas17.py):
@@ -1999,11 +2003,11 @@ Obviously, we won't be able to use some random character because `natas28` and `
 
 ![natas27_4.jpg](screenshots/natas/natas27_4.jpg)
 
-It's not what we wanted but it's progress. It looks like the two strings still match, despite having extra spaces. What if we add a non-whitespace character at the end?
+It's not what we wanted, but it's progress. It looks like the two strings still match, despite having extra spaces. What if we add a non-whitespace character at the end?
 
 ![natas27_5.jpg](screenshots/natas/natas27_5.jpg)
 
-It worked!
+It worked! The extra character was truncated because it past the 64 character limit, leaving us with a new user named `natas28`.
 
 ```bash
 curl -s "http://natas27:$natas27_pass@natas27.natas.labs.overthewire.org/" --data-urlencode "username=natas28                                                         ." -d "password=password" >/dev/null; curl -s "http://natas27:$natas27_pass@natas27.natas.labs.overthewire.org/index.php?username=natas28&password=password" | sed "s/$natas27_pass//g" | egrep -o [[:alnum:]]{32}

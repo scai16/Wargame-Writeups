@@ -7,6 +7,7 @@ Writeups for wargames and long-running CTF challenges.
 - [Over The Wire](OverTheWire/README.md) ![Variety](https://img.shields.io/badge/Variety-purple)
   - [Bandit](OverTheWire/Bandit.md) ![Linux](https://img.shields.io/badge/Linux-yellow)
   - [Natas](OverTheWire/Natas.md) ![Web Exploitation](https://img.shields.io/badge/Web%20Exploitation-brightgreen)
+  - [Leviathan](OverTheWire/Leviathan.md) ![Linux](https://img.shields.io/badge/Linux-yellow)
 
 ## To Do
 

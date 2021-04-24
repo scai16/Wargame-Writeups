@@ -5,16 +5,15 @@
 <details>
 <summary><b>Table of Contents</b></summary>
 
-- [OverTheWire - Leviathan](#overthewire---leviathan)
-  - [Introduction](#introduction)
-  - [Level 0](#level-0)
-  - [Level 1](#level-1)
-  - [Level 2](#level-2)
-  - [Level 3](#level-3)
-  - [Level 4](#level-4)
-  - [Level 5](#level-5)
-  - [Level 6](#level-6)
-  - [Level 7](#level-7)
+- [Introduction](#introduction)
+- [Level 0](#level-0)
+- [Level 1](#level-1)
+- [Level 2](#level-2)
+- [Level 3](#level-3)
+- [Level 4](#level-4)
+- [Level 5](#level-5)
+- [Level 6](#level-6)
+- [Level 7](#level-7)
 
 </details>
 

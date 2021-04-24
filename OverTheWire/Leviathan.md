@@ -64,6 +64,8 @@ drwxr-xr-x 3 root       root         4096 Aug 26  2019 ..
 grep -hoPR "the password for leviathan1 is \K[[:alnum:]]+"
 ```
 
+[*Back to top*](#overthewire---leviathan)
+
 ## Level 1
 
 When we login to `leviathan1`, we see a program named `check` in our home directory. Let's see what happens when we run it.
@@ -127,6 +129,8 @@ $ whoami
 leviathan2
 $ cat /etc/leviathan_pass/leviathan2
 ```
+
+[*Back to top*](#overthewire---leviathan)
 
 ## Level 2
 
@@ -247,6 +251,8 @@ The great thing about `cat` is that we can read multiple files at once by separa
 file="/tmp/ leviathan3"; touch "$file"; cd /etc/leviathan_pass/; ~/printfile "$file"; rm "$file"
 ```
 
+[*Back to top*](#overthewire---leviathan)
+
 ## Level 3
 
 For this challenge, we have another suid binary, `level3`.
@@ -338,6 +344,8 @@ Enter the password> snlprintf
 $ cat /etc/leviathan_pass/leviathan4
 ```
 
+[*Back to top*](#overthewire---leviathan)
+
 ## Level 4
 
 For this challenge, we have a file named `bin` in a hidden directory, `.trash`. When you run it, it prints the password as a binary string. All we have to do is convert the binary string back to ascii.
@@ -345,6 +353,8 @@ For this challenge, we have a file named `bin` in a hidden directory, `.trash`. 
 ```bash
 for i in $(~/.trash/bin | sed 's/ /\n/g'); do echo -ne "\x$(printf "%x" $(( 2#$i )))"; done
 ```
+
+[*Back to top*](#overthewire---leviathan)
 
 ## Level 5
 
@@ -377,6 +387,8 @@ It looks like this program is trying to read a file named `/tmp/file.log`. Let's
 ln -s /etc/leviathan_pass/leviathan6 /tmp/file.log;~/leviathan5
 ```
 
+[*Back to top*](#overthewire---leviathan)
+
 ## Level 6
 
 For this challenge, we have suid binary that is looking for a 4 digit code. We can retrieve the code using gdb:
@@ -401,6 +413,8 @@ leviathan7
 $ cat /etc/leviathan_pass/leviathan7
 ```
 
+[*Back to top*](#overthewire---leviathan)
+
 ## Level 7
 
 Looks like we made it to the last level.
@@ -411,3 +425,5 @@ CONGRATULATIONS
 $ cat CONGRATULATIONS
 Well Done, you seem to have used a *nix system before, now try something more serious.
 ```
+
+[*Back to top*](#overthewire---leviathan)

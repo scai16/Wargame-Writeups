@@ -67,6 +67,8 @@ All the information we need to login with is in the challenge description. Use t
 ssh bandit0@bandit.labs.overthewire.org -p 2220
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 0
 
 **Challenge Description**
@@ -85,6 +87,8 @@ The password to the `bandit1` account is in a file named `readme`. Use `cat` to 
 cat readme
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 1
 
 **Challenge Description**
@@ -100,6 +104,8 @@ The password to the `bandit2` account is in a file named `-`. When `-` is used a
 ```bash
 cat ./-
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 2
 
@@ -118,6 +124,8 @@ The password for `bandit3` is stored in a file called `spaces in this filename`.
 cat spaces\ in\ this\ filename
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 3
 
 **Challenge Description**
@@ -133,6 +141,8 @@ The password for `bandit4` is stored in a hidden file in the `inhere` directory.
 ```bash
 cat inhere/$(ls -A inhere)
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 4
 
@@ -150,6 +160,8 @@ The password for `bandit5` is the only file that contains all human-readable cha
 ```bash
 cat $(file inhere/* | awk -F': ' '$2=="ASCII text" {print $1}')
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 5
 
@@ -173,6 +185,8 @@ We can use the `find` command to search for files matching the given parameters.
 cat $(find ./ -size 1033c ! -executable) | tr -d "[:blank:]"
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 6
 
 **Challenge Description**
@@ -195,6 +209,8 @@ We can use the `find` command to search for files matching the given parameters.
 cat $(find / -size 33c -user bandit7 -group bandit6 2>/dev/null)
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 7
 
 **Challenge Description**
@@ -210,6 +226,8 @@ Use grep to find the word `millionth`.
 ```bash
 grep millionth data.txt | cut -f2
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 8
 
@@ -228,6 +246,8 @@ We can use `uniq` to find unique strings.
 sort data.txt | uniq -u
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 9
 
 **Challenge Description**
@@ -245,6 +265,8 @@ For this challenge, we can use regex to find the password for us. From the chall
 grep -aoP "={2,}\s+?\K[[:alnum:]]{32}" data.txt
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 10
 
 **Challenge Description**
@@ -260,6 +282,8 @@ Use the command `base64` to decode the text and search for the password format.
 ```bash
 base64 -d data.txt | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 11
 
@@ -278,6 +302,8 @@ The password is encrypted using ROT13. We can use the command `tr` to decrypt th
 ```bash
 cat data.txt | tr [n-za-mN-ZA-M] [a-zA-Z] | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 12
 
@@ -319,6 +345,8 @@ Finally, we add `cd ~;rm -rf $d` to clean up after we're done.
 d=$(mktemp -d)&&xxd -r ~/data.txt > $d/data&&cd $d;while true;do ext="$(file data | cut -d' ' -f2)";case $ext in "gzip") mv data data.gz&&gzip -d data.gz;;"bzip2") mv data data.bz2&&bzip2 -d data.bz2;;"POSIX") tmp="$(tar xvf data)"&&rm data&&mv $tmp data;;"ASCII") egrep -o [[:alnum:]]{32} data&&break;;esac;done;cd ~;rm -rf $d
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 13
 
 **Challenge Description**
@@ -338,6 +366,8 @@ For this challenge, we are given the private key to `ssh` into the server as `ba
 ssh bandit14@localhost -i sshkey.private -oStrictHostKeyChecking=no 'cat /etc/bandit_pass/bandit14' 2>/dev/null
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 14
 
 **Challenge Description**
@@ -354,6 +384,8 @@ We can connect to an open port with the `nc` command.
 ```bash
 echo $bandit14_pass | nc localhost 30000 | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 15
 
@@ -375,6 +407,8 @@ We can connect with SSL encryption using `openssl`.
 ```bash
 echo $bandit15_pass | openssl s_client -quiet -connect localhost:30001 2>/dev/null | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 16
 
@@ -414,6 +448,8 @@ Then we put it all together in a `for` loop to iterate over each port.
 for port in $(nmap -p31000-32000 localhost | grep open | cut -d/ -f1);do echo $bandit16_pass | timeout 1 openssl s_client -quiet -connect localhost:$port 2>/dev/null | egrep -oz "\-{5}BEGIN RSA PRIVATE KEY.+END RSA PRIVATE KEY\-{5}";done
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 17
 
 **Challenge Description**
@@ -435,6 +471,8 @@ The `diff` command can be used to find the line that's been changed. We can also
 diff --changed-group-format='%>' --unchanged-group-format='' passwords.old passwords.new
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 18
 
 **Challenge Description**
@@ -451,6 +489,8 @@ Since we know where the password is stored, we can use `ssh` to execute a comman
 ```bash
 ssh bandit18@bandit.labs.overthewire.org -p 2220 'cat readme'
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 19
 
@@ -469,6 +509,8 @@ The `setuid` binary allows us to execute commands as `bandit20`. This allows us 
 ```bash
 ./bandit20-do cat /etc/bandit_pass/bandit20
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 20
 
@@ -505,6 +547,8 @@ This part isn't necessary but you can use `$RANDOM` to generate a random port fo
 port=$(( $RANDOM | 1024 ));(echo $bandit20_pass | nc -lp $port &sleep .1;./suconnect $port >/dev/null)
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 21
 
 **Challenge Description**
@@ -522,6 +566,8 @@ For this challenge, the password was hiding in a file in the `tmp` directory. I 
 ```bash
 cat $(cat $(cat /etc/cron.d/cronjob_bandit22 | head -1 | cut -d' ' -f3) | sed -n 2p | cut -d' ' -f3)
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 22
 
@@ -557,6 +603,8 @@ We can use `sed` to parse out the line that creates the hash and modify it so it
 ```bash
 eval $(cat $(cat /etc/cron.d/cronjob_bandit23 | head -1 | cut -d' ' -f3) | sed '4!d;s/\$myname/bandit23/');cat /tmp/$mytarget
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 23
 
@@ -625,6 +673,8 @@ Don't forget to clean up with `rm -rf` after we're done:
 d=$(mktemp -d);s=$(mktemp -p /var/spool/bandit24/ --suffix=.sh);echo "touch $d/\$(cat /etc/bandit_pass/bandit24)" > $s;chmod 755 $s;chmod 733 $d;sleep 60;ls $d;rm -rf $d
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 24
 
 **Challenge Description**
@@ -642,6 +692,8 @@ We can solve this challenge by using brace expansion to format the pin code.
 ```bash
 for i in {0000..9999};do echo $bandit24_pass $i;done | nc localhost 30002 | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 25
 
@@ -702,6 +754,8 @@ Once we enter `vi` editor mode, we can use the `:e` command to open another file
 
 Once we've copied the password, we can exit the `vi` editor by using `:q`, and then press `q` to exit out of `more`.
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 26
 
 **Challenge Description**
@@ -719,6 +773,8 @@ We can solve this challenge with a slightly modified version of the last level. 
 Once we've changed the environment variable, we can execute any command we want.
 
 ![bandit27_2.jpg](screenshots/bandit/bandit27_2.jpg)
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 27
 
@@ -748,6 +804,8 @@ The password is located within the `README` file in the cloned repo.
 d=$(mktemp -d);git clone -q ssh://bandit27-git@localhost/home/bandit27-git/repo $d;egrep -o [[:xdigit:]]{32} $d/*;rm -rf $d
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 28
 
 **Challenge Description**
@@ -767,6 +825,8 @@ Use `git show` to show all changes.
 ```bash
 d=$(mktemp -d);git clone -q ssh://bandit28-git@localhost/home/bandit28-git/repo $d&&cd $d;git show | egrep -ow [[:xdigit:]]{32};cd ~;rm -rf $d
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 29
 
@@ -788,6 +848,8 @@ The password for the next level is hidden in another branch named `dev`. We can 
 d=$(mktemp -d);git clone -q ssh://bandit29-git@localhost/home/bandit29-git/repo $d&&cd $d;for branch in $(git for-each-ref --format="%(refname)");do git checkout -q $branch;git show | egrep -ow [[:xdigit:]]{32};done;cd ~;rm -rf $d
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 30
 
 **Challenge Description**
@@ -805,6 +867,8 @@ Clone the repository and find the password for the next level.
 ```bash
 d=$(mktemp -d);git clone -q ssh://bandit30-git@localhost/home/bandit30-git/repo $d&&cd $d;for i in $(git tag);do git show $i;done;cd ~;rm -rf $d
 ```
+
+[*Back to top*](#overthewire---bandit)
 
 ## Level 31
 
@@ -824,6 +888,8 @@ Clone the repository and find the password for the next level.
 d=$(mktemp -d);git clone -q ssh://bandit31-git@localhost/home/bandit31-git/repo $d&&cd $d;echo "May I come in?" > key.txt;git add -f key.txt;git commit -m "key.txt";git push 2>&1 | egrep -o [[:xdigit:]]{32};cd ~;rm -rf $d
 ```
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 32
 
 **Challenge Description**
@@ -838,8 +904,12 @@ This challenge is another shell escape. Unfortunately, that means no one-liner f
 
 ![bandit32_1.jpg](screenshots/bandit/bandit32_1.jpg)
 
+[*Back to top*](#overthewire---bandit)
+
 ## Level 33
 
 ```
 At this moment, level 34 does not exist yet.
 ```
+
+[*Back to top*](#overthewire---bandit)

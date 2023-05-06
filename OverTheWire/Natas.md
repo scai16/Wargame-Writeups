@@ -229,7 +229,7 @@ if(array_key_exists("submit", $_POST)) {
 Here we can see a variable, `encodedSecret`, and a function, `encodeSecret`, being declared. Looks like all we need to do is reverse the `encodeSecret` function so our input matches the `encodedSecret`.
 
 ```bash
-curl -s "http://natas8:$natas8_pass@natas8.natas.labs.overthewire.org/" -X 'POST' -d "secret=$(curl -s "http://natas8:$natas8_pass@natas8.natas.labs.overthewire.org/index-source.html" | grep -oP '\$encodedSecret&nbsp;=&nbsp;"\K[^"]+' | xxd -p -r | rev | base64 -d)&submit" | sed "s/$natas8_pass//g" | egrep -o [[:alnum:]]{32}
+curl -s "http://natas8:$natas8_pass@natas8.natas.labs.overthewire.org/" -X 'POST' -d "secret=$(curl -s "http://natas8:$natas8_pass@natas8.natas.labs.overthewire.org/index-source.html" | sed -r 's/<[^>]+>//g' | grep -oP '\$encodedSecret&nbsp;=&nbsp;"\K[^"]+' | xxd -p -r | rev | base64 -d)&submit" | sed "s/$natas8_pass//g" | egrep -o [[:alnum:]]{32}
 ```
 
 [*Back to top*](#overthewire---natas)
@@ -370,6 +370,9 @@ This tells us the decrypted is a json array with the keys `showpassword` and `bg
 ```
 
 We can throw this into [CyberChef](https://gchq.github.io/CyberChef/#recipe=URL_Decode()From_Base64('A-Za-z0-9%2B/%3D',true)XOR(%7B'option':'UTF8','string':'%7B%22showpassword%22:%22no%22,%22bgcolor%22:%22%23ffffff%22%7D'%7D,'Standard',false)&input=Q2xWTEloNEFTQ3NDQkU4bEF4TWFjRk1aVjJoZFZWb3RFaGhVSlFOVkFtaFNFVjRzRnhGZWFBdyUzRA) to verify for us.
+
+> **Note**: The key at the time of writing this is `qw8J`.\
+Be sure to check if the key has changed and update your values accordingly.
 
 Now we just have to create a new array where `showpassword` is `yes` and encrypt it with the key. We can use [CyberChef](https://gchq.github.io/CyberChef/#recipe=XOR(%7B'option':'UTF8','string':'qw8J'%7D,'Standard',false)To_Base64('A-Za-z0-9%2B/%3D')&input=eyJzaG93cGFzc3dvcmQiOiJ5ZXMiLCJiZ2NvbG9yIjoiI2ZmZmZmZiJ9) for that as well. This gives us our new cookie value, `ClVLIh4ASCsCBE8lAxMacFMOXTlTWxooFhRXJh4FGnBTVF4sFxFeLFMK`.
 
